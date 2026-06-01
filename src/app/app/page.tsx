@@ -7,7 +7,6 @@ import HeroGeometric from "@/components/hero-geometric";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PlantIdentifier from "@/components/app/plant-identifier";
 import PlantSearch from "@/components/app/plant-search";
-import { Button } from "@/components/ui/button"; // For potential future use
 
 export default function AppPage() {
   const [loading, setLoading] = useState(true);
@@ -16,8 +15,9 @@ export default function AppPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
+      // getSession reads from local storage — faster and avoids race condition
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         router.replace("/login");
       } else {
         setAuthenticated(true);
@@ -25,9 +25,25 @@ export default function AppPage() {
       setLoading(false);
     };
     checkAuth();
+
+    // Also listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        router.replace('/login');
+      } else if (session) {
+        setAuthenticated(true);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+    </div>
+  );
   if (!authenticated) return null;
 
   return (

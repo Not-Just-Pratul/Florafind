@@ -38,7 +38,7 @@ export function ConnectionError() {
             <li>Add your Supabase URL and anon key:</li>
             <div className="bg-gray-100 p-2 rounded text-xs font-mono mt-2">
               NEXT_PUBLIC_SUPABASE_URL=your_supabase_url<br />
-              NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+              NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
             </div>
             <li>Restart the development server</li>
           </ol>

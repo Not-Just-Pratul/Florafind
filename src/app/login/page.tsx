@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmail, signInWithGoogle } from "@/lib/auth";
+import { signInWithGoogle } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
 import { Eye, EyeOff, Leaf } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
-import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -27,14 +25,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      router.push('/app');
+      // Use window.location.href for full page reload
+      // This ensures cookies are properly read on the next page load
+      window.location.href = '/dashboard';
     } catch (error: any) {
       setError(error.message || 'An error occurred during login');
     } finally {

@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion"
 import { Pacifico } from "next/font/google"
-import Image from "next/image"
 import { cn } from "@/lib/utils"
 import type React from 'react';
 import { Leaf } from "lucide-react"
@@ -37,12 +36,9 @@ function ElegantShape({
   lightGradient?: string
   isDarkMode?: boolean
 }) {
-  // Use the appropriate gradient based on theme
   const activeGradient = isDarkMode 
     ? (darkGradient || gradient)
     : (lightGradient || "from-gray-950/[0.04]")
-    
-  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <motion.div
@@ -78,12 +74,10 @@ function ElegantShape({
           height,
         }}
         className="relative"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <div
           className={cn(
-            "absolute inset-0 rounded-full glass-effect transition-all duration-500",
+            "absolute inset-0 rounded-full glass-effect",
             "bg-gradient-to-r to-transparent",
             activeGradient,
             isDarkMode 
@@ -92,7 +86,6 @@ function ElegantShape({
             isDarkMode
               ? "shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]"
               : "shadow-[0_8px_32px_0_rgba(0,0,0,0.03)]",
-            isHovered && "transform scale-110",
           )}
         />
       </motion.div>
@@ -113,16 +106,14 @@ export default function HeroGeometric({
   title2?: string;
   description?: string;
 }) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Ensure theme is available after mounting
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Default to dark theme colors
-  const isDarkMode = !mounted || theme === "dark" || theme === "system";
+  const isDarkMode = !mounted || resolvedTheme === "dark";
 
   const fadeUpVariants = {
     hidden: { opacity: 0, y: 30 },

@@ -7,23 +7,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { LogOut, User, Settings, Home, Leaf, Bell, Shield, HelpCircle, Moon, Sun, ChevronRight, Calendar as CalendarIcon, PlusCircle, Search } from "lucide-react";
+import { LogOut, User, Home, Leaf, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentUser, signOut, updateProfile } from "@/lib/auth";
+import { getSession, signOut, updateProfile } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Calendar } from "@/components/ui/calendar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function DashboardPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
   const [profileData, setProfileData] = useState({
     username: "",
     avatar_url: ""
@@ -39,39 +35,35 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    async function loadUser() {
-      try {
-        const { user, error } = await getCurrentUser();
-        
-        if (error || !user) {
-          toast({
-            title: "Authentication Required",
-            description: "Please sign in to access the dashboard.",
-            variant: "destructive"
-          });
-          router.push("/login");
-          return;
-        }
-        
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/login");
+      } else {
+        setAuthenticated(true);
+        const user = session.user;
         setUser(user);
         setProfileData({
           username: user.user_metadata?.username || "",
           avatar_url: user.user_metadata?.avatar_url || ""
         });
-        setLoading(false);
-      } catch (error) {
-        console.error("Error loading user:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load user data. Please try again.",
-          variant: "destructive"
-        });
+      }
+      setLoading(false);
+    };
+    checkAuth();
+
+    // Also listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        router.replace('/login');
+      } else if (session) {
+        setAuthenticated(true);
         setLoading(false);
       }
-    }
-    
-    loadUser();
-  }, [router, toast]);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const handleLogout = async () => {
     try {
@@ -92,8 +84,7 @@ export default function DashboardPage() {
       });
       
       router.push("/");
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -120,8 +111,7 @@ export default function DashboardPage() {
         title: "Profile Updated",
         description: "Your profile has been successfully updated."
       });
-    } catch (error) {
-      console.error("Profile update error:", error);
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -130,13 +120,12 @@ export default function DashboardPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+    </div>
+  );
+  if (!authenticated) return null;
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4">

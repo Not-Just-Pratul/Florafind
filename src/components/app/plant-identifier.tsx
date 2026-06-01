@@ -46,7 +46,7 @@ async function compressImage(file: File): Promise<Blob> {
       let width = img.width;
       let height = img.height;
 
-      // Calculate new dimensions while maintaining aspect ratio
+      // Scale down while maintaining aspect ratio
       if (width > height) {
         if (width > COMPRESSED_MAX_WIDTH) {
           height = Math.round((height * COMPRESSED_MAX_WIDTH) / width);
@@ -59,12 +59,8 @@ async function compressImage(file: File): Promise<Blob> {
         }
       }
 
-      // Handle device pixel ratio for retina displays
-      const pixelRatio = window.devicePixelRatio || 1;
-      canvas.width = width * pixelRatio;
-      canvas.height = height * pixelRatio;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
+      canvas.width = width;
+      canvas.height = height;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) {
@@ -72,8 +68,6 @@ async function compressImage(file: File): Promise<Blob> {
         return;
       }
 
-      // Scale context for retina displays
-      ctx.scale(pixelRatio, pixelRatio);
       ctx.drawImage(img, 0, 0, width, height);
       
       canvas.toBlob(
@@ -118,13 +112,13 @@ export default function PlantIdentifier() {
   const [filePreview, setFilePreview] = useState<string | null>(state.filePreview || null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasCamera, setHasCamera] = useState(false);
+  const [showResult, setShowResult] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Check if device has camera
     setHasCamera(hasGetUserMedia());
   }, []);
 
@@ -139,7 +133,15 @@ export default function PlantIdentifier() {
     if (state.filePreview) {
       setFilePreview(state.filePreview);
     }
+    if (state.data) {
+      setShowResult(true);
+    }
   }, [state, toast]);
+
+  const clearInputs = () => {
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+    if (uploadInputRef.current) uploadInputRef.current.value = "";
+  };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -148,49 +150,37 @@ export default function PlantIdentifier() {
       return;
     }
 
-    // Validate that it's an image file
     if (!file.type.startsWith('image/')) {
       toast({
         variant: "destructive",
         title: "Invalid File Type",
         description: "Please select a valid image file",
       });
-      if (cameraInputRef.current) {
-        cameraInputRef.current.value = "";
-      }
-      if (uploadInputRef.current) {
-        uploadInputRef.current.value = "";
-      }
+      clearInputs();
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       toast({
         variant: "destructive",
         title: "File Too Large",
         description: "Please select an image under 10MB",
       });
-      if (cameraInputRef.current) {
-        cameraInputRef.current.value = "";
-      }
-      if (uploadInputRef.current) {
-        uploadInputRef.current.value = "";
-      }
+      clearInputs();
       return;
     }
 
     try {
       setIsProcessing(true);
       
-      // Show preview of original image immediately
+      // Show preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
         setFilePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
 
-      // Compress image in background
+      // Compress image
       const compressedBlob = await compressImage(file);
       const compressedFile = new File([compressedBlob], file.name, {
         type: 'image/jpeg',
@@ -200,27 +190,17 @@ export default function PlantIdentifier() {
       // Update both file inputs with compressed image
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(compressedFile);
-      if (cameraInputRef.current) {
-        cameraInputRef.current.files = dataTransfer.files;
-      }
-      if (uploadInputRef.current) {
-        uploadInputRef.current.files = dataTransfer.files;
-      }
+      if (cameraInputRef.current) cameraInputRef.current.files = dataTransfer.files;
+      if (uploadInputRef.current) uploadInputRef.current.files = dataTransfer.files;
 
-    } catch (error) {
-      console.error('Error processing image:', error);
+    } catch {
       toast({
         variant: "destructive",
         title: "Processing Error",
         description: "Failed to process image. Please try again.",
       });
       setFilePreview(null);
-      if (cameraInputRef.current) {
-        cameraInputRef.current.value = "";
-      }
-      if (uploadInputRef.current) {
-        uploadInputRef.current.value = "";
-      }
+      clearInputs();
     } finally {
       setIsProcessing(false);
     }
@@ -228,14 +208,9 @@ export default function PlantIdentifier() {
 
   const handleRemoveImage = () => {
     setFilePreview(null);
-    if (cameraInputRef.current) {
-      cameraInputRef.current.value = "";
-    }
-    if (uploadInputRef.current) {
-      uploadInputRef.current.value = "";
-    }
-    state.data = undefined;
-    state.error = undefined;
+    setShowResult(false);
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+    if (uploadInputRef.current) uploadInputRef.current.value = "";
   };
 
   return (
@@ -369,7 +344,7 @@ export default function PlantIdentifier() {
           </div>
         )}
 
-        {state.data && (
+        {showResult && state.data && (
           <div className="mt-8">
             <h3 className="text-xl font-semibold mb-4 text-center font-headline">Identification Result</h3>
             <PlantInfoCard data={state.data} type="identification" uploadedImagePreview={filePreview || undefined} />

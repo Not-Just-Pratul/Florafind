@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Save, Moon, Sun, Bell, BellOff, Upload, Trash2, HelpCircle } from "lucide-react";
-import { ThemeProvider, useTheme } from "next-themes";
+import { useTheme } from "next-themes";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function SettingsPage() {
@@ -41,8 +41,7 @@ export default function SettingsPage() {
         } else {
           router.push("/login");
         }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
+      } catch {
         router.push("/login");
       } finally {
         setLoading(false);
@@ -102,7 +101,7 @@ export default function SettingsPage() {
             .remove([filePath]);
             
           if (error) {
-            console.error('Error deleting avatar from storage:', error);
+            // Storage deletion failure is non-critical, continue
           }
         }
       }
@@ -125,8 +124,7 @@ export default function SettingsPage() {
         title: "Avatar Removed",
         description: "Your profile picture has been removed."
       });
-    } catch (error) {
-      console.error('Error removing avatar:', error);
+    } catch {
       toast({
         title: "Error",
         description: "Failed to remove avatar. Please try again.",
@@ -140,7 +138,7 @@ export default function SettingsPage() {
     
     try {
       // Check if avatars bucket exists, create if not
-      const { data: buckets, error: bucketsError } = await supabase
+      const { data: buckets } = await supabase
         .storage
         .listBuckets();
       
@@ -164,7 +162,7 @@ export default function SettingsPage() {
       const fileExt = avatarFile.name.split('.').pop();
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('avatars')
         .upload(fileName, avatarFile, {
           upsert: true,
@@ -172,9 +170,7 @@ export default function SettingsPage() {
           contentType: avatarFile.type
         });
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       // Get the public URL of the uploaded image
       const { data: { publicUrl } } = supabase.storage
@@ -182,8 +178,7 @@ export default function SettingsPage() {
         .getPublicUrl(fileName);
       
       return publicUrl;
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
+    } catch {
       toast({
         title: "Upload Failed",
         description: "There was a problem uploading your avatar.",
@@ -224,8 +219,7 @@ export default function SettingsPage() {
         title: "Settings Saved",
         description: "Your preferences have been updated successfully."
       });
-    } catch (error) {
-      console.error("Settings update error:", error);
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -255,8 +249,7 @@ export default function SettingsPage() {
       });
       
       router.push("/");
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",
@@ -266,7 +259,11 @@ export default function SettingsPage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-[calc(100vh-4rem)]">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   return (

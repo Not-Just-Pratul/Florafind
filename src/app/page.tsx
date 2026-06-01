@@ -44,16 +44,15 @@ const floatingLeaf = {
 
 export default function Home() {
   const isMobile = useIsMobile();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   
-  // Ensure theme is available after mounting
   useEffect(() => {
     setMounted(true);
   }, []);
   
-  // Default to dark theme colors
-  const isDarkMode = !mounted || theme === "dark" || theme === "system";
+  // Use resolvedTheme so "system" resolves to actual dark/light
+  const isDarkMode = !mounted || resolvedTheme === "dark";
   
   return (
     <HeroGeometric>

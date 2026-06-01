@@ -35,14 +35,6 @@ export async function identifyPlantAction(
   } catch (error) {
     console.error("Error in identifyPlantAction:", error);
     const errorMessage = error instanceof Error ? error.message : "Failed to identify plant. Please try again.";
-    // Ensure filePreview is passed back even on error if available, so UI doesn't lose it.
-    const filePreview = formData.get("image") ? 
-      URL.createObjectURL(formData.get("image") as File) : // This is not ideal for server actions, re-evaluate if needed
-      (prevState?.filePreview || undefined);
-    
-    // For server actions, converting blob URL back to data URI or handling differently might be needed.
-    // For now, we just pass back the error. If image was large, re-sending data URI is not efficient.
-    // Let's assume `prevState.filePreview` is what we want to keep if an error occurs after image processing.
     return { error: errorMessage, filePreview: prevState?.filePreview };
   }
 }

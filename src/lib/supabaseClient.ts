@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+// Browser-side Supabase client — uses cookies via @supabase/ssr,
+// compatible with Next.js 15 and the server-side helpers.
+export { createClient } from '@/utils/supabase/client';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey); 
+import { createClient } from '@/utils/supabase/client';
+export const supabase = createClient();

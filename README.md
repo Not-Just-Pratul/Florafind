@@ -40,7 +40,7 @@ FloraFind is an AI-powered plant identification application that helps users dis
    Create a `.env.local` file with the following variables:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
    GENKIT_API_KEY=your_genkit_api_key
    ```
 

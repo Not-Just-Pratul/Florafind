@@ -21,7 +21,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabaseClient";
 import { savePlantToGarden } from "@/lib/garden-service";
-import { getSession, getCurrentUser } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
 

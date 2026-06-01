@@ -1,5 +1,3 @@
-'use client';
-
 import { supabase } from './supabaseClient';
 import { Database } from './database.types';
 import { IdentifyPlantFromImageOutput } from '@/ai/flows/identify-plant-from-image';
@@ -14,16 +12,10 @@ export async function savePlantToGarden(
   imageUrl: string
 ): Promise<{ data: GardenPlant | null; error: any }> {
   try {
-    console.log("Starting savePlantToGarden with:", { 
-      scientificName: plantData.scientificName, 
-      commonName: plantData.commonName
-    });
-
     // First check if we have a valid session
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !sessionData.session) {
-      console.error("No active session:", sessionError || "Session not found");
       return { 
         data: null, 
         error: { message: 'Please log in to save plants to your garden.' } 
@@ -34,8 +26,6 @@ export async function savePlantToGarden(
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
-      console.error("Authentication error:", userError || "User not authenticated");
-      // Try to refresh the session
       await supabase.auth.refreshSession();
       return { 
         data: null, 
@@ -44,7 +34,6 @@ export async function savePlantToGarden(
     }
 
     const userId = userData.user.id;
-    console.log("Saving plant for user:", userId);
 
     // Check if plant already exists for this user to avoid duplicates
     const { data: existingPlant, error: checkError } = await supabase
@@ -55,12 +44,10 @@ export async function savePlantToGarden(
       .maybeSingle();
 
     if (checkError) {
-      console.error("Error checking for existing plant:", checkError);
       return { data: null, error: checkError };
     }
 
     if (existingPlant) {
-      console.log("Plant already exists in user's garden");
       return { data: existingPlant as GardenPlant, error: null };
     }
 
@@ -86,9 +73,6 @@ export async function savePlantToGarden(
       .single();
 
     if (error) {
-      console.error("Error saving plant:", error);
-      
-      // Check for specific error types
       if (error.code === '23505') {
         return { data: null, error: { message: 'This plant already exists in your garden.' } };
       } else if (error.code === '42P01') {
@@ -96,14 +80,11 @@ export async function savePlantToGarden(
       } else if (error.code === '42501') {
         return { data: null, error: { message: 'You do not have permission to save plants. Please log in again.' } };
       }
-      
       return { data: null, error };
-    } else {
-      console.log("Plant saved successfully:", data);
-      return { data, error: null };
     }
+
+    return { data, error: null };
   } catch (error: any) {
-    console.error("Unexpected error saving plant:", error);
     return { 
       data: null, 
       error: error instanceof Error 
@@ -122,18 +103,14 @@ export async function getUserGarden(): Promise<{ data: GardenPlant[] | null; err
       return { data: null, error: userError || new Error('User not authenticated') };
     }
 
-    const userId = userData.user.id;
-    console.log("Fetching garden for user:", userId);
-
     const { data, error } = await supabase
       .from('garden_plants')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', userData.user.id)
       .order('created_at', { ascending: false });
 
     return { data, error };
   } catch (error) {
-    console.error("Error fetching garden plants:", error);
     return { data: null, error };
   }
 }
@@ -147,13 +124,11 @@ export async function getGardenPlant(id: string): Promise<{ data: GardenPlant | 
       return { data: null, error: userError || new Error('User not authenticated') };
     }
     
-    const userId = userData.user.id;
-    
     const { data, error } = await supabase
       .from('garden_plants')
       .select('*')
       .eq('id', id)
-      .eq('user_id', userId)
+      .eq('user_id', userData.user.id)
       .single();
 
     return { data, error };
@@ -171,13 +146,11 @@ export async function updatePlantNotes(id: string, notes: string): Promise<{ dat
       return { data: null, error: userError || new Error('User not authenticated') };
     }
     
-    const userId = userData.user.id;
-    
     const { data, error } = await supabase
       .from('garden_plants')
       .update({ notes })
       .eq('id', id)
-      .eq('user_id', userId);
+      .eq('user_id', userData.user.id);
 
     return { data, error };
   } catch (error) {
@@ -194,16 +167,14 @@ export async function deletePlantFromGarden(id: string): Promise<{ error: any }>
       return { error: userError || new Error('User not authenticated') };
     }
     
-    const userId = userData.user.id;
-    
     const { error } = await supabase
       .from('garden_plants')
       .delete()
       .eq('id', id)
-      .eq('user_id', userId);
+      .eq('user_id', userData.user.id);
 
     return { error };
   } catch (error) {
     return { error };
   }
-} 
+}

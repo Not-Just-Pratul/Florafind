@@ -8,15 +8,13 @@ import { getGardenPlant, GardenPlant, updatePlantNotes, deletePlantFromGarden } 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import HeroGeometric from "@/components/hero-geometric";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, Trash2, CalendarDays, Clock, BookOpen, ThermometerSun, Globe, Leaf, Pill, Skull, AlertTriangle, ShieldCheck, Pencil } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Clock, BookOpen, ThermometerSun, Globe, Leaf, Pill, Skull, AlertTriangle, ShieldCheck, Pencil } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PlantDetailsPage({ params }: { params: { id: string } }) {
@@ -27,16 +25,6 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
   const router = useRouter();
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Ensure theme is available after mounting
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  // Default to dark theme colors
-  const isDarkMode = !mounted || theme === "dark" || theme === "system";
 
   useEffect(() => {
     async function checkAuthAndLoadPlant() {
@@ -50,7 +38,6 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
       // Load plant details
       const { data: plantData, error } = await getGardenPlant(params.id);
       if (error || !plantData) {
-        console.error("Error loading plant:", error);
         router.push("/garden");
         return;
       }
@@ -69,10 +56,7 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
     setSavingNotes(true);
     const { error } = await updatePlantNotes(plant.id, notesInput);
     
-    if (error) {
-      console.error("Error saving notes:", error);
-    } else {
-      // Update local state
+    if (!error) {
       setPlant({ ...plant, notes: notesInput });
       setEditingNotes(false);
     }
@@ -88,7 +72,6 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
       const { error } = await deletePlantFromGarden(plant.id);
       
       if (error) {
-        console.error("Error deleting plant:", error);
         setDeleteLoading(false);
       } else {
         router.push("/garden");
@@ -146,7 +129,7 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
                 <Skeleton className="h-4 w-full mt-2" />
                 <Skeleton className="h-4 w-full mt-2" />
                 <Skeleton className="h-4 w-3/4 mt-2" />
-                <Separator className="my-6" />
+                <div className="my-6 border-t border-border" />
                 <Skeleton className="h-6 w-1/4 mb-3" />
                 <Skeleton className="h-4 w-full mt-2" />
                 <Skeleton className="h-4 w-full mt-2" />

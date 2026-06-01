@@ -1,15 +1,17 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
-    // Check environment variables
     const envCheck = {
       supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      supabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      supabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     };
+
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
     
-    // Try to get the health status from Supabase
     const { data, error } = await supabase
       .from('garden_plants')
       .select('id')
@@ -32,4 +34,4 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     }, { status: 500 });
   }
-} 
+}

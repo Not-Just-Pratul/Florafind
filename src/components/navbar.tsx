@@ -20,24 +20,21 @@ import { UserAccountNav } from '@/components/user-account-nav';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
-import Image from "next/image";
 export function Navbar() {
   const pathname = usePathname();
   const { toast } = useToast();
   const router = useRouter();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   
-  // Ensure theme is available after mounting
   useEffect(() => {
     setMounted(true);
   }, []);
   
-  // Default to dark theme colors
-  const isDarkMode = !mounted || theme === "dark" || theme === "system";
+  const isDarkMode = !mounted || resolvedTheme === "dark";
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -45,16 +42,13 @@ export function Navbar() {
         const { user, error } = await getCurrentUser();
         
         if (user) {
-          console.log("User authenticated:", user);
           setIsAuthenticated(true);
           setUser(user);
         } else {
-          console.log("User not authenticated");
           setIsAuthenticated(false);
           setUser(null);
         }
       } catch (error) {
-        console.error("Error checking authentication:", error);
         setIsAuthenticated(false);
         setUser(null);
       }

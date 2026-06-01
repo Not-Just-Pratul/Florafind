@@ -24,16 +24,14 @@ export default function GardenPage() {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Ensure theme is available after mounting
   useEffect(() => {
     setMounted(true);
   }, []);
   
-  // Default to dark theme colors
-  const isDarkMode = !mounted || theme === "dark" || theme === "system";
+  const isDarkMode = !mounted || resolvedTheme === "dark";
 
   // Check authentication and load plants
   useEffect(() => {
@@ -54,9 +52,7 @@ export default function GardenPage() {
   const loadGardenPlants = async () => {
     setLoading(true);
     const { data, error } = await getUserGarden();
-    if (error) {
-      console.error("Error fetching garden plants:", error);
-    } else if (data) {
+    if (!error && data) {
       setPlants(data);
     }
     setLoading(false);
@@ -66,10 +62,7 @@ export default function GardenPage() {
   const handleDeletePlant = async (id: string) => {
     setDeleteLoading(id);
     const { error } = await deletePlantFromGarden(id);
-    if (error) {
-      console.error("Error deleting plant:", error);
-    } else {
-      // Update the plants list after deletion
+    if (!error) {
       setPlants(plants.filter(plant => plant.id !== id));
     }
     setDeleteLoading(null);
