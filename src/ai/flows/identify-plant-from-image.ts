@@ -82,9 +82,6 @@ The JSON must match this exact structure:
         ],
       },
     ],
-    response_format: {
-      type: 'json_object',
-    },
   });
 
   const raw = response.choices[0]?.message?.content;
@@ -93,7 +90,9 @@ The JSON must match this exact structure:
     throw new Error('No response from OpenRouter');
   }
 
-  const parsed = JSON.parse(raw);
+  // Strip any markdown code fences the model may have added
+  const cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+  const parsed = JSON.parse(cleaned);
 
   return IdentifyPlantFromImageOutputSchema.parse(parsed);
 }
