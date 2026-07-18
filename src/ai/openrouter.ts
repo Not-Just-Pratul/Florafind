@@ -18,6 +18,6 @@ export const openrouter = new OpenAI({
 export const DEFAULT_MODEL = 'google/gemma-4-31b-it:free';
 
 // Image generation model via OpenRouter.
-// black-forest-labs/flux.2-klein-4b: free, fast Flux model for plant visual variations.
-// black-forest-labs/flux.2-klein-4b:free - completely free version (rate limits apply)
-export const IMAGE_MODEL = 'black-forest-labs/flux.2-klein-4b:free';
+// black-forest-labs/flux.2-klein-4b: affordable, fast Flux model for plant visual variations.
+// openrouter/auto: auto-route to the best available model
+export const IMAGE_MODEL = 'openrouter/auto';
