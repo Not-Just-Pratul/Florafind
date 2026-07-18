@@ -13,6 +13,7 @@ import { getSession, signOut, updateProfile } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabaseClient";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -53,9 +54,15 @@ export default function DashboardPage() {
     checkAuth();
 
     // Also listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        router.replace('/login');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'SIGNED_OUT') {
+        // Verify the session is actually gone before redirecting.
+        // Token refresh can fire a spurious SIGNED_OUT event.
+        supabase.auth.getSession().then(({ data: { session: currentSession } }: { data: { session: Session | null } }) => {
+          if (!currentSession) {
+            router.replace('/login');
+          }
+        });
       } else if (session) {
         setAuthenticated(true);
         setLoading(false);

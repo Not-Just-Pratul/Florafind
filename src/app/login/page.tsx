@@ -9,7 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Leaf } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from "@/utils/supabase/client";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -34,6 +34,7 @@ function LoginPage() {
     setLoading(true);
 
     try {
+      const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -41,8 +42,6 @@ function LoginPage() {
 
       if (error) throw error;
 
-      // Use window.location.href for full page reload
-      // This ensures cookies are properly read on the next page load
       window.location.href = '/dashboard';
     } catch (error: any) {
       setError(error.message || 'An error occurred during login');

@@ -6,7 +6,7 @@ import HeroGeometric from "@/components/hero-geometric";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 import { getUserGarden, GardenPlant, deletePlantFromGarden } from "@/lib/garden-service";
 import Image from "next/image";
 import Link from "next/link";
@@ -37,6 +37,7 @@ export default function GardenPage() {
   useEffect(() => {
     const checkAuth = async () => {
       setLoading(true);
+      const supabase = createClient();
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
         router.replace("/login");

@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Save, Moon, Sun, Bell, BellOff, Upload, Trash2, HelpCircle } from "lucide-react";
 import { useTheme } from "next-themes";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
@@ -88,102 +88,40 @@ export default function SettingsPage() {
 
   const handleRemoveAvatar = async () => {
     try {
-      // If there's an existing avatar URL from Supabase Storage, delete it
-      if (avatarUrl && avatarUrl.includes('storage.googleapis.com')) {
-        // Extract the file path from the URL
+      const supabase = createClient();
+      if (avatarUrl && avatarUrl.includes('supabase')) {
         const urlPath = new URL(avatarUrl).pathname;
         const filePath = urlPath.split('/').slice(-1)[0];
-        
         if (filePath) {
-          // Delete the file from storage
-          const { error } = await supabase.storage
-            .from('avatars')
-            .remove([filePath]);
-            
-          if (error) {
-            // Storage deletion failure is non-critical, continue
-          }
+          await supabase.storage.from('avatars').remove([filePath]);
         }
       }
-      
-      // Clear the avatar locally
       setAvatarUrl("");
       setAvatarFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      
-      // Update the user profile to remove the avatar_url
-      if (user) {
-        await updateProfile({
-          avatar_url: undefined,
-        });
-      }
-      
-      toast({
-        title: "Avatar Removed",
-        description: "Your profile picture has been removed."
-      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (user) await updateProfile({ avatar_url: undefined });
+      toast({ title: "Avatar Removed", description: "Your profile picture has been removed." });
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to remove avatar. Please try again.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to remove avatar. Please try again.", variant: "destructive" });
     }
   };
 
   const uploadAvatar = async () => {
     if (!avatarFile) return avatarUrl || undefined;
-    
+    const supabase = createClient();
     try {
-      // Check if avatars bucket exists, create if not
-      const { data: buckets } = await supabase
-        .storage
-        .listBuckets();
-      
-      const avatarsBucketExists = buckets?.some(bucket => bucket.name === 'avatars');
-      
-      if (!avatarsBucketExists) {
-        // Create the avatars bucket
-        const { error: createBucketError } = await supabase
-          .storage
-          .createBucket('avatars', {
-            public: true,
-            fileSizeLimit: 2097152 // 2MB
-          });
-          
-        if (createBucketError) {
-          throw createBucketError;
-        }
-      }
-      
-      // Upload the avatar to Supabase Storage
       const fileExt = avatarFile.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      
-      const { error } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, avatarFile, {
-          upsert: true,
-          cacheControl: '3600',
-          contentType: avatarFile.type
-        });
-      
+      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
+      const { error } = await supabase.storage.from('avatars').upload(fileName, avatarFile, {
+        upsert: true,
+        cacheControl: '3600',
+        contentType: avatarFile.type
+      });
       if (error) throw error;
-      
-      // Get the public URL of the uploaded image
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-      
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
       return publicUrl;
     } catch {
-      toast({
-        title: "Upload Failed",
-        description: "There was a problem uploading your avatar.",
-        variant: "destructive"
-      });
+      toast({ title: "Upload Failed", description: "There was a problem uploading your avatar.", variant: "destructive" });
       return avatarUrl || undefined;
     }
   };

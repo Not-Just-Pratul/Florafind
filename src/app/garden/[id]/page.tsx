@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 import { getGardenPlant, GardenPlant, updatePlantNotes, deletePlantFromGarden } from "@/lib/garden-service";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function PlantDetailsPage({ params }: { params: { id: string } }) {
+export default function PlantDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  // Next.js 15 App Router: params is a Promise and must be unwrapped with `use()`
+  const { id } = use(params);
+
   const [plant, setPlant] = useState<GardenPlant | null>(null);
   const [loading, setLoading] = useState(true);
   const [notesInput, setNotesInput] = useState("");
@@ -28,6 +31,8 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
 
   useEffect(() => {
     async function checkAuthAndLoadPlant() {
+      const supabase = createClient();
+
       // Check if user is authenticated
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
@@ -36,7 +41,7 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
       }
       
       // Load plant details
-      const { data: plantData, error } = await getGardenPlant(params.id);
+      const { data: plantData, error } = await getGardenPlant(id);
       if (error || !plantData) {
         router.push("/garden");
         return;
@@ -48,7 +53,7 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
     }
     
     checkAuthAndLoadPlant();
-  }, [params.id, router]);
+  }, [id, router]);
   
   const handleSaveNotes = async () => {
     if (!plant) return;
@@ -404,4 +409,4 @@ export default function PlantDetailsPage({ params }: { params: { id: string } })
       </div>
     </HeroGeometric>
   );
-} 
+}

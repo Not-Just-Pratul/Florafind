@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import HeroGeometric from "@/components/hero-geometric";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PlantIdentifier from "@/components/app/plant-identifier";
@@ -14,8 +15,9 @@ export default function AppPage() {
   const router = useRouter();
 
   useEffect(() => {
+    const supabase = createClient();
+
     const checkAuth = async () => {
-      // getSession reads from local storage — faster and avoids race condition
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.replace("/login");
@@ -26,10 +28,13 @@ export default function AppPage() {
     };
     checkAuth();
 
-    // Also listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        router.replace('/login');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      if (event === 'SIGNED_OUT') {
+        supabase.auth.getSession().then(({ data: { session: currentSession } }: { data: { session: Session | null } }) => {
+          if (!currentSession) {
+            router.replace('/login');
+          }
+        });
       } else if (session) {
         setAuthenticated(true);
         setLoading(false);

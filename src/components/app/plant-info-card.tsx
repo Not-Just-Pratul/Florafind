@@ -19,7 +19,8 @@ import { generatePlantVariationAction } from "@/lib/actions";
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { savePlantToGarden } from "@/lib/garden-service";
 import { useRouter } from "next/navigation";
 
@@ -116,7 +117,8 @@ export function PlantInfoCard({ data, type, uploadedImagePreview, plantName: ini
 
   // Check if user is authenticated
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const supabase = createClient();
+    const { data: authListener } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       if (session && session.user) {
         setIsAuthenticated(true);
       } else {
@@ -196,21 +198,35 @@ export function PlantInfoCard({ data, type, uploadedImagePreview, plantName: ini
         let imageUrl = uploadedImagePreview;
         if (uploadedImagePreview.startsWith('data:')) {
           try {
-            const base64Data = uploadedImagePreview.split(',')[1];
-            const mimeType = uploadedImagePreview.split(';')[0].split(':')[1];
-            const buffer = Buffer.from(base64Data, 'base64');
-            const filename = `plant_${Date.now()}.${mimeType.split('/')[1] || 'jpg'}`;
+            const supabase = createClient();
+
+            // Get the authenticated user id to use as the storage path prefix.
+            // Most Supabase Storage RLS policies require files to be stored
+            // under the user's own folder: {bucket}/{user_id}/{filename}
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              throw new Error('Not authenticated — please sign in again.');
+            }
+
+            // Convert base64 data URI to a Blob
+            const response = await fetch(uploadedImagePreview);
+            const blob = await response.blob();
+            const mimeType = blob.type || 'image/jpeg';
+            const extension = mimeType.split('/')[1] || 'jpg';
+            // Store under user's folder so RLS policy (user_id = auth.uid()) passes
+            const filename = `${user.id}/plant_${Date.now()}.${extension}`;
             
             // Upload to Supabase Storage
-            const { data: uploadData, error: uploadError } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
               .from('plant_images')
-              .upload(filename, buffer, {
+              .upload(filename, blob, {
                 contentType: mimeType,
                 upsert: true
               });
             
             if (uploadError) {
-              throw uploadError;
+              // Surface the real Supabase Storage error so it's visible in the UI
+              throw new Error(`Storage error: ${uploadError.message} (${uploadError.name})`);
             }
             
             // Get public URL
@@ -219,14 +235,14 @@ export function PlantInfoCard({ data, type, uploadedImagePreview, plantName: ini
               .getPublicUrl(filename);
 
             imageUrl = publicUrl;
-          } catch (uploadError) {
+          } catch (uploadError: any) {
             console.error("Error uploading image:", uploadError);
             toast({
               title: "Image Upload Failed",
-              description: "Could not save the plant image. Please try again.",
+              description: uploadError?.message || "Could not save the plant image. Please try again.",
               variant: "destructive"
             });
-            setSavingToGarden(false); // Stop loading state
+            setSavingToGarden(false);
             return;
           }
         }

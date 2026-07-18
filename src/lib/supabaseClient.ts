@@ -1,5 +1,7 @@
-// Browser-side Supabase client — uses cookies via @supabase/ssr,
-// compatible with Next.js 15 and the server-side helpers.
+// Re-export createClient for convenience.
+// All code should prefer calling createClient() directly rather than using
+// the `supabase` singleton export below, to ensure a fresh client is used
+// for each operation (important for PKCE OAuth flows).
 export { createClient } from '@/utils/supabase/client';
 
 import { createClient } from '@/utils/supabase/client';

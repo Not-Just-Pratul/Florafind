@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { createClient } from '@/utils/supabase/client';
 import { Database } from './database.types';
 import { IdentifyPlantFromImageOutput } from '@/ai/flows/identify-plant-from-image';
 
@@ -11,6 +11,7 @@ export async function savePlantToGarden(
   plantData: IdentifyPlantFromImageOutput,
   imageUrl: string
 ): Promise<{ data: GardenPlant | null; error: any }> {
+  const supabase = createClient();
   try {
     // First check if we have a valid session
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -96,6 +97,7 @@ export async function savePlantToGarden(
 
 // Get all plants in the user's garden
 export async function getUserGarden(): Promise<{ data: GardenPlant[] | null; error: any }> {
+  const supabase = createClient();
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -117,6 +119,7 @@ export async function getUserGarden(): Promise<{ data: GardenPlant[] | null; err
 
 // Get a specific plant from the user's garden
 export async function getGardenPlant(id: string): Promise<{ data: GardenPlant | null; error: any }> {
+  const supabase = createClient();
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -139,6 +142,7 @@ export async function getGardenPlant(id: string): Promise<{ data: GardenPlant | 
 
 // Update a plant's notes
 export async function updatePlantNotes(id: string, notes: string): Promise<{ data: any; error: any }> {
+  const supabase = createClient();
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
@@ -160,6 +164,7 @@ export async function updatePlantNotes(id: string, notes: string): Promise<{ dat
 
 // Delete a plant from the user's garden
 export async function deletePlantFromGarden(id: string): Promise<{ error: any }> {
+  const supabase = createClient();
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
