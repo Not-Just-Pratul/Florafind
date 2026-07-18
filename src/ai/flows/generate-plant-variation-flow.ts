@@ -33,13 +33,8 @@ export async function generatePlantVariation(
   const prompt = `A high-quality botanical illustration of ${input.plantName}, ${input.variationDescription}. Detailed, realistic, natural lighting, vibrant colors, professional plant photography style.`;
 
   // Use Pollinations.ai for free image generation (no API key required)
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true`;
-
-  // Verify the image is accessible
-  const response = await fetch(imageUrl, { method: 'HEAD' });
-  if (!response.ok) {
-    throw new Error('Image generation failed');
-  }
+  // Use flux model for better results
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&model=flux`;
 
   return { generatedImage: imageUrl };
 }
