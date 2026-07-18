@@ -34,6 +34,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Add patterns for Pollinations image generation
+      {
+        protocol: 'https',
+        hostname: 'image.pollinations.ai',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 
