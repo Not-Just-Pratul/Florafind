@@ -253,7 +253,7 @@ export function PlantInfoCard({ data, type, uploadedImagePreview, plantName: ini
           console.error("Error saving to garden from service:", saveError);
           toast({
             title: "Error Saving Plant",
-            description: saveError.message || "An unexpected error occurred while saving the plant.",
+            description: saveError instanceof Error ? saveError.message : "An unexpected error occurred while saving the plant.",
             variant: "destructive"
           });
         } else {

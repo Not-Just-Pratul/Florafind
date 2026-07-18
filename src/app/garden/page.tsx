@@ -193,17 +193,17 @@ export default function GardenPage() {
             </div>
           </div>
           
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="mb-6 glass-effect-green w-full sm:w-auto justify-start overflow-x-auto">
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary/20">
+          <Tabs defaultValue="all" className="w-full" onValueChange={(value) => console.log('Tab changed to:', value)}>
+            <TabsList className="mb-6 glass-effect-green w-full sm:w-auto justify-start flex-wrap gap-1">
+              <TabsTrigger value="all" className="data-[state=active]:bg-primary/20 cursor-pointer">
                 <Flower2 className="w-4 h-4 mr-2" />
                 All Plants ({plants.length})
               </TabsTrigger>
-              <TabsTrigger value="safe" className="data-[state=active]:bg-green-500/20">
+              <TabsTrigger value="safe" className="data-[state=active]:bg-green-500/20 cursor-pointer">
                 <Leaf className="w-4 h-4 mr-2" />
                 Safe Plants ({plants.filter(p => !p.is_poisonous).length})
               </TabsTrigger>
-              <TabsTrigger value="toxic" className="data-[state=active]:bg-red-500/20">
+              <TabsTrigger value="toxic" className="data-[state=active]:bg-red-500/20 cursor-pointer">
                 <AlertTriangle className="w-4 h-4 mr-2" />
                 Toxic Plants ({plants.filter(p => p.is_poisonous).length})
               </TabsTrigger>
@@ -233,11 +233,11 @@ export default function GardenPage() {
               )}
             </TabsContent>
             
-            <TabsContent value="safe">
+            <TabsContent value="safe" className="mt-6">
               {renderPlantGrid(plants.filter(plant => !plant.is_poisonous))}
             </TabsContent>
             
-            <TabsContent value="toxic">
+            <TabsContent value="toxic" className="mt-6">
               {renderPlantGrid(plants.filter(plant => plant.is_poisonous))}
             </TabsContent>
           </Tabs>

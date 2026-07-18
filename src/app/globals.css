@@ -172,6 +172,7 @@
     @apply absolute inset-0 opacity-0 transition-opacity duration-300 ease-in-out;
     content: '';
     background: var(--glass-light-highlight);
+    pointer-events: none;
   }
   
   .glass-effect:hover::before {
@@ -191,6 +192,7 @@
     @apply absolute inset-0 opacity-0 transition-opacity duration-300 ease-in-out;
     content: '';
     background: var(--glass-light-highlight);
+    pointer-events: none;
   }
   
   .glass-effect-green:hover::before {

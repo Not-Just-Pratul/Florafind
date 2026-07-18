@@ -40,11 +40,16 @@ FloraFind is an AI-powered plant identification application that helps users dis
    Create a `.env.local` file with the following variables:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    GENKIT_API_KEY=your_genkit_api_key
    ```
 
-4. Run the development server:
+4. Set up Supabase:
+   - Create a Supabase project at [supabase.com](https://supabase.com)
+   - Run the SQL setup script in your Supabase SQL Editor: `supabase-setup.sql` or use the migration file at `supabase/migrations/001_initial_setup.sql`
+   - This will create the required tables, enable RLS, and set up the storage bucket
+
+5. Run the development server:
    ```bash
    npm run dev
    ```

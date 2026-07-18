@@ -1,6 +1,51 @@
 'use client';
 
-export default function Error() {
-  // Error boundaries will also catch any Next.js loading indicators that throw errors
-  return null;
-} 
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import Link from 'next/link';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error('Application error:', error);
+  }, [error]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="max-w-md w-full text-center space-y-6">
+        <div className="flex justify-center">
+          <div className="rounded-full bg-destructive/10 p-4">
+            <AlertTriangle className="h-12 w-12 text-destructive" />
+          </div>
+        </div>
+        <h1 className="text-2xl font-bold">Something went wrong</h1>
+        <p className="text-muted-foreground">
+          An unexpected error occurred. Please try again or return to the home page.
+        </p>
+        {error.digest && (
+          <p className="text-xs text-muted-foreground">
+            Error ID: {error.digest}
+          </p>
+        )}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button onClick={reset} variant="default">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/">
+              <Home className="mr-2 h-4 w-4" />
+              Go Home
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

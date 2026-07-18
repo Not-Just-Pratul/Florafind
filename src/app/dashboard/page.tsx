@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { LogOut, User, Home, Leaf, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getSession, signOut, updateProfile } from "@/lib/auth";
+import { signOut, updateProfile } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 export default function DashboardPage() {
@@ -36,6 +36,7 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
+    const supabase = createClient();
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {

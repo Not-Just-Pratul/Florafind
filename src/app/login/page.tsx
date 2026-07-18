@@ -2,14 +2,13 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signInWithGoogle } from "@/lib/auth";
+import { signInWithGoogle, signInWithEmail, getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Leaf } from 'lucide-react';
-import { createClient } from "@/utils/supabase/client";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,9 +19,18 @@ function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    getCurrentUser().then(({ user }) => {
+      if (user) {
+        router.replace("/dashboard");
+      }
+    });
+  }, [router]);
+
   // Show error passed back from the OAuth callback route
   useEffect(() => {
-    const oauthError = searchParams.get('error');
+    const oauthError = searchParams?.get('error');
     if (oauthError) {
       setError(decodeURIComponent(oauthError));
     }
@@ -34,11 +42,7 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await signInWithEmail(email, password);
 
       if (error) throw error;
 

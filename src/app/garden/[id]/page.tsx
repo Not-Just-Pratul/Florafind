@@ -12,10 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import HeroGeometric from "@/components/hero-geometric";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, Trash2, Clock, BookOpen, ThermometerSun, Globe, Leaf, Pill, Skull, AlertTriangle, ShieldCheck, Pencil } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Clock, BookOpen, ThermometerSun, Globe, Leaf, Pill, Skull, AlertTriangle, ShieldCheck, Pencil, X, Expand } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 export default function PlantDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   // Next.js 15 App Router: params is a Promise and must be unwrapped with `use()`
@@ -27,6 +28,7 @@ export default function PlantDetailsPage({ params }: { params: Promise<{ id: str
   const [savingNotes, setSavingNotes] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -59,10 +61,11 @@ export default function PlantDetailsPage({ params }: { params: Promise<{ id: str
     if (!plant) return;
     
     setSavingNotes(true);
-    const { error } = await updatePlantNotes(plant.id, notesInput);
+    const { data, error } = await updatePlantNotes(plant.id, notesInput);
     
     if (!error) {
-      setPlant({ ...plant, notes: notesInput });
+      // If data is available, use it; otherwise, fall back to local state
+      setPlant(data ? (data as GardenPlant) : { ...plant, notes: notesInput });
       setEditingNotes(false);
     }
     
@@ -180,123 +183,110 @@ export default function PlantDetailsPage({ params }: { params: Promise<{ id: str
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="lg:w-1/3"
+              className="lg:w-1/3 w-full"
             >
-              <div className="sticky top-20">
-                <div className="mb-6">
-                  <Link href="/garden">
-                    <Button variant="ghost" size="sm" className="mb-4 hover:glass-nav-item px-0">
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back to Garden
-                    </Button>
-                  </Link>
-                  <div className="relative rounded-xl overflow-hidden border border-primary/20 glass-effect shadow-xl">
-                    <div className="h-80">
-                      {plant.image_url ? (
-                        <Image 
-                          src={plant.image_url} 
+              <div className="lg:sticky lg:top-20">
+                <Link href="/garden">
+                  <Button variant="ghost" size="sm" className="mb-4 hover:glass-nav-item px-0">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Garden
+                  </Button>
+                </Link>
+                
+                {/* Image with click-to-expand */}
+                <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+                  <DialogTrigger asChild>
+                    <div className="relative rounded-xl overflow-hidden border border-primary/20 glass-effect shadow-xl cursor-pointer group">
+                      <div className="relative h-80 w-full">
+                        {plant.image_url ? (
+                          <>
+                            <Image 
+                              src={plant.image_url} 
+                              alt={plant.common_name}
+                              fill
+                              sizes="(max-width: 1024px) 100vw, 33vw"
+                              priority
+                              className="object-cover transition-transform duration-300 group-hover:scale-105" 
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                              <Expand className="text-white opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full bg-card/40 flex items-center justify-center">
+                            <Leaf className="text-muted-foreground h-20 w-20 opacity-20" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <h1 className="text-2xl font-bold text-white mb-1">{plant.common_name}</h1>
+                        <p className="text-md italic text-white/80">{plant.scientific_name}</p>
+                      </div>
+                    </div>
+                  </DialogTrigger>
+                  {plant.image_url && (
+                    <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-black/95 border-none">
+                      <div className="relative w-full h-full flex items-center justify-center p-4">
+                        <Image
+                          src={plant.image_url}
                           alt={plant.common_name}
                           fill
+                          sizes="100vw"
+                          className="object-contain"
                           priority
-                          className="object-cover" 
                         />
-                      ) : (
-                        <div className="w-full h-full bg-card/40 flex items-center justify-center">
-                          <Leaf className="text-muted-foreground h-20 w-20 opacity-20" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                      <h1 className="text-2xl font-bold text-white mb-1">{plant.common_name}</h1>
-                      <p className="text-md italic text-white/80">{plant.scientific_name}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {plant.is_poisonous ? (
-                        <Badge variant="destructive" className="flex items-center gap-1">
-                          <Skull className="h-3 w-3" />
-                          Toxic Plant
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="flex items-center gap-1 bg-green-500/20 text-green-700 dark:text-green-300">
-                          <ShieldCheck className="h-3 w-3" />
-                          Safe Plant
-                        </Badge>
-                      )}
-                      
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        Added {formatDate(plant.created_at)}
-                      </Badge>
-                    </div>
-                    
-                    {plant.hindi_name && (
-                      <div className="text-sm">
-                        <span className="font-medium">Hindi Name:</span> {plant.hindi_name}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-6 space-y-3">
-                    <Button 
-                      variant="destructive"
-                      className="w-full flex items-center justify-center"
-                      onClick={handleDeletePlant}
-                      disabled={deleteLoading}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {deleteLoading ? "Removing..." : "Remove from Garden"}
-                    </Button>
-                  </div>
-                  
-                  {/* Notes section */}
-                  <Card className="mt-6 overflow-hidden glass-effect bg-card/40">
-                    <CardContent className="p-5">
-                      <div className="flex justify-between items-center mb-3">
-                        <h2 className="text-lg font-bold">My Notes</h2>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => setEditingNotes(!editingNotes)}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-4 right-4 text-white hover:bg-white/20 z-10"
+                          onClick={() => setImageDialogOpen(false)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <X className="h-6 w-6" />
                         </Button>
                       </div>
-                      
-                      {editingNotes ? (
-                        <>
-                          <Textarea 
-                            placeholder="Add your notes about this plant here..."
-                            className="min-h-[150px] glass-effect"
-                            value={notesInput}
-                            onChange={(e) => setNotesInput(e.target.value)}
-                          />
-                          <div className="flex justify-end mt-3">
-                            <Button 
-                              onClick={handleSaveNotes}
-                              disabled={savingNotes}
-                              size="sm"
-                              variant="glass-primary"
-                              className="gap-2"
-                            >
-                              <Save className="h-4 w-4" />
-                              {savingNotes ? "Saving..." : "Save Notes"}
-                            </Button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="bg-card/30 rounded-lg p-3 min-h-[100px] text-sm">
-                          {plant.notes ? plant.notes : (
-                            <p className="text-muted-foreground italic">
-                              No notes added yet. Click the edit button to add some.
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    </DialogContent>
+                  )}
+                </Dialog>
+                
+                {/* Quick info badges */}
+                <div className="mt-4 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {plant.is_poisonous ? (
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <Skull className="h-3 w-3" />
+                        Toxic Plant
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="flex items-center gap-1 bg-green-500/20 text-green-700 dark:text-green-300">
+                        <ShieldCheck className="h-3 w-3" />
+                        Safe Plant
+                      </Badge>
+                    )}
+                    
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Added {formatDate(plant.created_at)}
+                    </Badge>
+                  </div>
+                  
+                  {plant.hindi_name && (
+                    <div className="text-sm">
+                      <span className="font-medium">Hindi Name:</span> {plant.hindi_name}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Delete button */}
+                <div className="mt-6 space-y-3">
+                  <Button 
+                    variant="destructive"
+                    className="w-full flex items-center justify-center"
+                    onClick={handleDeletePlant}
+                    disabled={deleteLoading}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {deleteLoading ? "Removing..." : "Remove from Garden"}
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -306,19 +296,84 @@ export default function PlantDetailsPage({ params }: { params: Promise<{ id: str
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="lg:w-2/3"
+              className="lg:w-2/3 w-full space-y-6"
             >
+              {/* Notes Section - MOVED to the right side for better usability */}
+              <Card className="overflow-hidden glass-effect bg-card/40">
+                <CardContent className="p-5">
+                  <div className="flex justify-between items-center mb-3">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                      <Pencil className="h-4 w-4 text-primary" />
+                      My Notes
+                    </h2>
+                    {!editingNotes && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingNotes(true)}
+                        className="gap-2"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit Notes
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {editingNotes ? (
+                    <div className="space-y-3">
+                      <Textarea 
+                        placeholder="Add your notes about this plant here..."
+                        className="min-h-[150px] glass-effect"
+                        value={notesInput}
+                        onChange={(e) => setNotesInput(e.target.value)}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingNotes(false);
+                            setNotesInput(plant.notes || "");
+                          }}
+                          disabled={savingNotes}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          onClick={handleSaveNotes}
+                          disabled={savingNotes}
+                          size="sm"
+                          variant="glass-primary"
+                          className="gap-2"
+                        >
+                          <Save className="h-4 w-4" />
+                          {savingNotes ? "Saving..." : "Save Notes"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-card/30 rounded-lg p-4 min-h-[100px] text-sm whitespace-pre-wrap">
+                      {plant.notes ? plant.notes : (
+                        <p className="text-muted-foreground italic">
+                          No notes added yet. Click the edit button to add some.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Plant Details Tabs */}
               <Tabs defaultValue="details" className="w-full">
-                <TabsList className="mb-6 glass-effect-green w-full sm:w-auto justify-start overflow-x-auto">
-                  <TabsTrigger value="details" className="data-[state=active]:bg-primary/20">
+                <TabsList className="mb-6 glass-effect-green w-full sm:w-auto justify-start flex-wrap gap-1">
+                  <TabsTrigger value="details" className="data-[state=active]:bg-primary/20 cursor-pointer">
                     <BookOpen className="w-4 h-4 mr-2" />
                     Details
                   </TabsTrigger>
-                  <TabsTrigger value="growing" className="data-[state=active]:bg-emerald-500/20">
+                  <TabsTrigger value="growing" className="data-[state=active]:bg-emerald-500/20 cursor-pointer">
                     <ThermometerSun className="w-4 h-4 mr-2" />
                     Growing
                   </TabsTrigger>
-                  <TabsTrigger value="medicinal" className="data-[state=active]:bg-cyan-500/20">
+                  <TabsTrigger value="medicinal" className="data-[state=active]:bg-cyan-500/20 cursor-pointer">
                     <Pill className="w-4 h-4 mr-2" />
                     Medicinal
                   </TabsTrigger>

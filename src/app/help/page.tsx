@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Search, Mail, MessageSquare } from "lucide-react";
+import { Search, Mail, MessageSquare, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
   
   const faqs = [
     {
@@ -60,6 +62,13 @@ export default function HelpPage() {
         faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : faqs;
+
+  const handleStartChat = () => {
+    toast({
+      title: "Live Chat",
+      description: "Live chat is currently offline. Please email us at support@florafind.com for assistance.",
+    });
+  };
 
   return (
     <div className="container max-w-3xl mx-auto py-8 px-4">
@@ -131,7 +140,9 @@ export default function HelpPage() {
             <CardFooter>
               <Button variant="outline" className="w-full" asChild>
                 <Link href="mailto:support@florafind.com">
+                  <Mail className="mr-2 h-4 w-4" />
                   Contact via Email
+                  <ExternalLink className="ml-2 h-3 w-3" />
                 </Link>
               </Button>
             </CardFooter>
@@ -150,7 +161,8 @@ export default function HelpPage() {
               </p>
             </CardContent>
             <CardFooter>
-              <Button className="w-full">
+              <Button className="w-full" onClick={handleStartChat}>
+                <MessageSquare className="mr-2 h-4 w-4" />
                 Start Chat
               </Button>
             </CardFooter>
@@ -159,4 +171,4 @@ export default function HelpPage() {
       </Card>
     </div>
   );
-} 
+}

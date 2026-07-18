@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signUpWithEmail, signInWithGoogle } from "@/lib/auth";
+import { signUpWithEmail, signInWithGoogle, getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
@@ -18,6 +18,15 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    getCurrentUser().then(({ user }) => {
+      if (user) {
+        router.replace("/dashboard");
+      }
+    });
+  }, [router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +44,8 @@ export default function SignupPage() {
     
     if (error) {
       setError(error.message);
+    } else if (user?.identities?.length === 0) {
+      setError("This email is already registered. Please sign in instead.");
     } else {
       // Supabase sends confirmation email by default
       // so we redirect to a confirmation page
