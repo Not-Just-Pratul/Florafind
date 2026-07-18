@@ -19,4 +19,5 @@ export const DEFAULT_MODEL = 'google/gemma-4-31b-it';
 
 // Image generation model via OpenRouter.
 // black-forest-labs/flux.2-klein-4b: free, fast Flux model for plant visual variations.
-export const IMAGE_MODEL = 'black-forest-labs/flux.2-klein-4b';
+// black-forest-labs/flux.2-klein-4b:free - completely free version (rate limits apply)
+export const IMAGE_MODEL = 'black-forest-labs/flux.2-klein-4b:free';
