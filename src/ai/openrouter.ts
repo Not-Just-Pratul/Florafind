@@ -15,7 +15,7 @@ export const openrouter = new OpenAI({
 // Default vision-capable model for plant identification and text tasks.
 // google/gemma-4-31b-it: vision capable, $0.10/M input — very cheap.
 // Swap to 'google/gemma-4-31b-it:free' for zero cost (heavy rate limits apply).
-export const DEFAULT_MODEL = 'google/gemma-4-31b-it';
+export const DEFAULT_MODEL = 'google/gemma-4-31b-it:free';
 
 // Image generation model via OpenRouter.
 // black-forest-labs/flux.2-klein-4b: free, fast Flux model for plant visual variations.
