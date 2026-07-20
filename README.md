@@ -1,6 +1,8 @@
 # 🌿 FloraFind
 
-FloraFind is an AI-powered plant identification application that helps users discover and learn about the flora around them. Built with modern web technologies, it offers a seamless experience for plant enthusiasts, gardeners, and nature lovers.
+FloraFind is an AI-powered plant identification application designed to help users discover and learn about the flora around them. Built with modern web technologies, it delivers a seamless experience for plant enthusiasts, gardeners, and nature lovers.
+
+**Live deployment:** https://florafind-ai.vercel.app/
 
 ## ✨ Features
 
